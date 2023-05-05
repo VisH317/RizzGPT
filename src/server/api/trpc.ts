@@ -15,9 +15,17 @@
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
+import { OpenAIApi, Configuration } from "openai";
+import { env } from "~/env.mjs";
 
 /** Replace this with an object if you want to pass things to `createContextInner`. */
 type CreateContextOptions = Record<string, never>;
+
+const config = new Configuration({
+  apiKey: env.OPENAI_KEY
+})
+
+const openai = new OpenAIApi(config)
 
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use it, you can export
@@ -30,7 +38,9 @@ type CreateContextOptions = Record<string, never>;
  * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts
  */
 const createInnerTRPCContext = (_opts: CreateContextOptions) => {
-  return {};
+  return {
+    openai
+  };
 };
 
 /**
