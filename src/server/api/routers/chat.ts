@@ -5,7 +5,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 const message = z.object({
     user: z.string(),
-    chat: z.string()
+    system: z.optional(z.string())
 })
 
 const req = z.object({
@@ -27,7 +27,7 @@ interface Message {
 export const chatRouter = createTRPCRouter({
     chat: publicProcedure
         .input(req)
-        .query(async ({ input, ctx }) => {
+        .mutation(async ({ input, ctx }) => {
             const { prompt, level } = input
             const targetPromptData = prompts[level-1]
         
@@ -35,7 +35,7 @@ export const chatRouter = createTRPCRouter({
 
             prompt.slice(0, prompts.length-1).map(p => {
                 messages.push({ role: "assistant", content: `User: ${p.user}` })
-                messages.push({ role: "assistant", content: `Chat: ${p.chat}` })
+                messages.push({ role: "assistant", content: `Chat: ${p.system}` })
             })
             
             messages.push({ role: "user", content: `${input.currentPrompt}\n\nAdd a score out of 100 for the user representing how well they are doing in winning over the person you are representing, add the score 2 newlines after the main response message` })
@@ -47,7 +47,7 @@ export const chatRouter = createTRPCRouter({
                 temperature: 1
             })
 
-            let ret = msg.data.choices[0]?.message?.content.split("\n\n")
+            let ret: string[] = (msg.data.choices[0]?.message?.content as string).split("\n\n")
 
             return ret
         }),

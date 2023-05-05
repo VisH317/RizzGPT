@@ -5,6 +5,10 @@ import prompts from '~/server/lib/prompts'
 export default function Game() {
     const [level, setLevel] = useState<number>(0)
     const [messages, setMessages] = useState<Message[]>([])
+    const [cur, setCur] = useState<string>("")
+    const [score, setScore] = useState<number>(0)
+
+    const chat = api.chat.chat.useMutation()
 
     const mapMessages = () => {
         return messages.map((m, idx) => (
@@ -23,6 +27,17 @@ export default function Game() {
         ))
     }
 
+    const submitMessage = async () => {
+        const msg: Message = { user: cur }
+        setMessages([...messages, msg])
+        const res: string[] = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
+        setScore(parseInt(res[1] as string))
+        setMessages(msgs => {
+            msgs[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res[0] as string }
+            return msgs
+        })
+    }
+
     return (
         <div className="flex min-h-screen flex-row bg-gradient-to-b from-black to-[#15162c]">
             <div className="w-1/2 p-20 border-r-2 border-slate-700">
@@ -37,7 +52,7 @@ export default function Game() {
                     {mapMessages()}
                 </div>
                 <div className='h-[10%] w-full flex flex-row'>
-                    <textarea className="w-[90%] bg-slate-600 rounded-tl-lg rounded-bl-lg text-slate-300 outline-none border-slate-500 border-2 p-5" style={{ resize: "none" }}/>
+                    <textarea className="w-[90%] bg-slate-600 rounded-tl-lg rounded-bl-lg text-slate-300 outline-none border-slate-500 border-2 p-5" style={{ resize: "none" }} value={cur} onChange={e => setCur(e.target.value)}/>
                     <button className='w-[10%] bg-gradient-to-r from-blue-500 to-fuchsia-500 rounded-tr-lg rounded-br-lg flex justify-center items-center group'>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className='group-hover:-translate-y-1 duration-300'><path fill="white" d="M24 0l-6 22-8.129-7.239 7.802-8.234-10.458 7.227-7.215-1.754 24-12zm-15 16.668v7.332l3.258-4.431-3.258-2.901z"/></svg>
                     </button>
