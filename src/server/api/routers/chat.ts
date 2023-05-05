@@ -38,7 +38,7 @@ export const chatRouter = createTRPCRouter({
                 messages.push({ role: "assistant", content: `Chat: ${p.chat}` })
             })
             
-            messages.push({ role: "user", content: input.currentPrompt })
+            messages.push({ role: "user", content: `${input.currentPrompt}\n\nAdd a score out of 100 for the user representing how well they are doing in winning over the person you are representing, add the score 2 newlines after the main response message` })
 
             const msg = await ctx.openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
@@ -47,11 +47,8 @@ export const chatRouter = createTRPCRouter({
                 temperature: 1
             })
 
-            const ret = msg.data.choices[0]?.message?.content
+            let ret = msg.data.choices[0]?.message?.content.split("\n\n")
 
             return ret
-            
         }),
-    getScore: publicProcedure
-        .input()
 });

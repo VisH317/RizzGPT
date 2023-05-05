@@ -7,7 +7,7 @@ import { chatRouter } from "~/server/api/routers/chat";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  example: chatRouter,
+  chat: chatRouter,
 });
 
 // export type definition of API
