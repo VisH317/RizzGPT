@@ -10,7 +10,8 @@ const message = z.object({
 
 const req = z.object({
     level: z.number(),
-    prompt: z.array(message)
+    prompt: z.array(message),
+    currentPrompt: z.string()
 })
 
 const res = z.object({
@@ -20,21 +21,37 @@ const res = z.object({
 
 interface Message {
     role: "system" | "user" | "assistant",
-    prompt: string
+    content: string
 }
 
 export const chatRouter = createTRPCRouter({
-    hello: publicProcedure
+    chat: publicProcedure
         .input(req)
-        .query(({ input, ctx }) => {
+        .query(async ({ input, ctx }) => {
             const { prompt, level } = input
             const targetPromptData = prompts[level-1]
         
-            const messages: Message[] = [{ role: "system", prompt: targetPromptData?.prompt as string }]
+            let messages: Message[] = [{ role: "system", content: targetPromptData?.prompt as string }]
 
-            const assistant = prompt.map(p => {
-                messages.push({ role: "assistant", prompt: `User: ${p.user}` })
-                messages.push({ role: "assistant", prompt: `Chat: ${p.chat}` })
+            prompt.slice(0, prompts.length-1).map(p => {
+                messages.push({ role: "assistant", content: `User: ${p.user}` })
+                messages.push({ role: "assistant", content: `Chat: ${p.chat}` })
             })
+            
+            messages.push({ role: "user", content: input.currentPrompt })
+
+            const msg = await ctx.openai.createChatCompletion({
+                model: "gpt-3.5-turbo",
+                messages,
+                max_tokens: 100,
+                temperature: 1
+            })
+
+            const ret = msg.data.choices[0]?.message?.content
+
+            return ret
+            
         }),
+    getScore: publicProcedure
+        .input()
 });
