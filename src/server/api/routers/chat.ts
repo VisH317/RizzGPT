@@ -1,7 +1,8 @@
 import { z } from "zod";
-import prompts from "~/server/lib/prompts";
+import { prompts } from "~/server/lib/prompts";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import basePrompt from "~/server/lib/prompts";
 
 const message = z.object({
     user: z.string(),
@@ -27,28 +28,31 @@ interface Message {
 export const chatRouter = createTRPCRouter({
     chat: publicProcedure
         .input(req)
-        .mutation(async ({ input, ctx }) => {
+        .mutation( ({ input, ctx }) => {
             const { prompt, level } = input
-            const targetPromptData = prompts[level-1]
+            const targetPromptData = prompts[level]?.prompt as string
         
-            let messages: Message[] = [{ role: "system", content: targetPromptData?.prompt as string }]
+            let messages: string =  basePrompt + targetPromptData
+            console.log("prompt: ", prompt)
 
             prompt.slice(0, prompts.length-1).map(p => {
-                messages.push({ role: "assistant", content: `User: ${p.user}` })
-                messages.push({ role: "assistant", content: `Chat: ${p.system}` })
+                console.log("test: ", p)
+                messages += `\n\nUser: ${p.user}`
+                messages += `\n\nResponse: ${p.system as string}`
             })
             
-            messages.push({ role: "user", content: `${input.currentPrompt}\n\nAdd a score out of 100 for the user representing how well they are doing in winning over the person you are representing, add the score 2 newlines after the main response message` })
+            messages += `\n\nLast message that requires response: ${input.currentPrompt}`
+            console.log("message: ", messages)
 
             const msg = await ctx.openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages,
+                messages: [{ role: "system", content: messages }],
                 max_tokens: 100,
                 temperature: 1
             })
 
-            let ret: string[] = (msg.data.choices[0]?.message?.content as string).split("\n\n")
+            const ret: string = (msg.data.choices[0]?.message?.content as string)
 
-            return ret
+            return messages
         }),
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { api } from '~/utils/api'
-import prompts from '~/server/lib/prompts'
+import { prompts } from '~/server/lib/prompts'
 
 export default function Game() {
     const [level, setLevel] = useState<number>(0)
@@ -12,7 +12,7 @@ export default function Game() {
 
     const mapMessages = () => {
         return messages.map((m, idx) => (
-            <div className="w-full flex flex-col gap-5">
+            <div className="w-full flex flex-col gap-5" key={idx}>
                 <div className="w-full flex flex-row justify-end">
                     <div className="w-1/2 rounded-lg bg-blue-500 p-2">
                         {m.user}
@@ -29,11 +29,12 @@ export default function Game() {
 
     const submitMessage = async () => {
         const msg: Message = { user: cur }
-        setMessages([...messages, msg])
-        const res: string[] = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
-        setScore(parseInt(res[1] as string))
+        setMessages(msgs => [...msgs, msg])
+        console.log("MESSAGES:", messages)
+        const res: string = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
+        // setScore(parseInt(res[1] as string))
         setMessages(msgs => {
-            msgs[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res[0] as string }
+            msgs[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res }
             return msgs
         })
     }
@@ -48,7 +49,7 @@ export default function Game() {
                 <p className="text-slate-400 font-light text-xl">Description: {prompts[level]?.prompt}</p>
             </div>
             <div className="px-20 py-10 w-1/2 flex flex-col gap-5">
-                <div className="h-[90%] w-full">
+                <div className="h-[65%] w-full overflow-auto">
                     {mapMessages()}
                 </div>
                 <div className='h-[10%] w-full flex flex-row'>
