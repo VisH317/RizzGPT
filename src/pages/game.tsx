@@ -31,11 +31,12 @@ export default function Game() {
         const msg: Message = { user: cur }
         setMessages(msgs => [...msgs, msg])
         console.log("MESSAGES:", messages)
-        const res: string = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
-        // setScore(parseInt(res[1] as string))
+        const res: string[] = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
+        setScore(parseInt(res[1] as string))
         setMessages(msgs => {
-            msgs[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res }
-            return msgs
+            const mutableMsg = [...msgs]
+            mutableMsg[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res[0] }
+            return mutableMsg
         })
     }
 
@@ -47,9 +48,11 @@ export default function Game() {
                 <p className="text-slate-200 font-normal text-xl">Your objective is to rizz the person up within {prompts[level]?.tries} tries</p>
                 <div className='h-2'/>
                 <p className="text-slate-400 font-light text-xl">Description: {prompts[level]?.prompt}</p>
+                <div className="h-2"/>
+                <p className="text-slate-400 font-light text-xl">Score: {score}</p>
             </div>
             <div className="px-20 py-10 w-1/2 flex flex-col gap-5">
-                <div className="h-[65%] w-full overflow-auto">
+                <div className="h-[65%] w-full overflow-auto gap-5 flex flex-col">
                     {mapMessages()}
                 </div>
                 <div className='h-[10%] w-full flex flex-row'>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prompts } from "~/server/lib/prompts";
+import { prompts, postPrompt } from "~/server/lib/prompts";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import basePrompt from "~/server/lib/prompts";
@@ -28,20 +28,22 @@ interface Message {
 export const chatRouter = createTRPCRouter({
     chat: publicProcedure
         .input(req)
-        .mutation( ({ input, ctx }) => {
+        .mutation( async ({ input, ctx }) => {
             const { prompt, level } = input
             const targetPromptData = prompts[level]?.prompt as string
         
             let messages: string =  basePrompt + targetPromptData
             console.log("prompt: ", prompt)
 
-            prompt.slice(0, prompts.length-1).map(p => {
+            prompt.map(p => {
                 console.log("test: ", p)
                 messages += `\n\nUser: ${p.user}`
                 messages += `\n\nResponse: ${p.system as string}`
             })
             
             messages += `\n\nLast message that requires response: ${input.currentPrompt}`
+            messages += targetPromptData
+            messages += postPrompt
             console.log("message: ", messages)
 
             const msg = await ctx.openai.createChatCompletion({
@@ -51,8 +53,9 @@ export const chatRouter = createTRPCRouter({
                 temperature: 1
             })
 
-            const ret: string = (msg.data.choices[0]?.message?.content as string)
+            const ret: string[] = (msg.data.choices[0]?.message?.content as string).split("Score: ")
+            ret[0]
 
-            return messages
+            return ret
         }),
 });
