@@ -1,10 +1,13 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
+
+  const router = useRouter()
 
   return (
     <>
@@ -15,8 +18,8 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-black to-[#15162c] gap-5">
         <h1 className="text-7xl font-bold text-white"><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-fuchsia-500">Rizz</span>GPT</h1>
-        <p className="text-xl w-1/2 text-center text-slate-400 font-normal">Improve your rizzing skills so youre not a fricking dweeb filler text i love filler text this is filler text </p>
-        <button className="group py-4 px-5 hover:-translate-y-1 duration-300 hover:shadow-lg text-white text-xl font-semibold rounded-lg bg-gradient-to-r from-blue-500 to-fuchsia-500 flex flex-row justify-center items-center">
+        <p className="text-xl w-1/2 text-center text-slate-400 font-normal">Improve your rizzing skills so youre not a fricking loser filler text i love filler text this is filler text </p>
+        <button className="group py-4 px-5 hover:-translate-y-1 duration-300 hover:shadow-lg text-white text-xl font-semibold rounded-lg bg-gradient-to-r from-blue-500 to-fuchsia-500 flex flex-row justify-center items-center" onClick={() => void router.push("/game")}>
           <p className="text-white font-semibold border-r-2 pr-3">Get Started</p>
           <svg aria-hidden="true" className="w-5 h-5 ml-2 -mr-1 group-hover:translate-x-1 duration-300" fill="currentColor" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
         </button>
