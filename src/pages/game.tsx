@@ -33,12 +33,17 @@ export default function Game() {
         setMessages(msgs => [...msgs, msg])
         console.log("MESSAGES:", messages)
         const res: string[] = await chat.mutateAsync({ level, prompt: messages.slice(0, messages.length-1), currentPrompt: msg.user })
-        setScore(parseInt(res[1] as string))
         setMessages(msgs => {
             const mutableMsg = [...msgs]
             mutableMsg[msgs.length-1] = { user: msgs[msgs.length-1]?.user as string, system: res[0] }
             return mutableMsg
         })
+        if(res[0]?.length===0 || parseInt(res[1] as string)<=20 || (messages.length>=10 && parseInt(res[1] as string)<70) || res.length<2) {
+            setMessages([])
+            setScore(0)
+            alert("You have failed miserably in attempting to showcase your rizz, and you have been determined to have negative rizz. Kinda sad ngl")
+        }
+        setScore(parseInt(res[1] as string))
     }
 
     return (

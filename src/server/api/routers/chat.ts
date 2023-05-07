@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prompts, postPrompt } from "~/server/lib/prompts";
+import { prompts, postPrompt, scorePrompt } from "~/server/lib/prompts";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import basePrompt from "~/server/lib/prompts";
@@ -36,11 +36,13 @@ export const chatRouter = createTRPCRouter({
             let assistant = `User: ${prompt[0]?.user as string}\n\nResponse: ${prompt[0]?.system as string}`
             console.log("prompt: ", prompt)
 
-            prompt.slice(1).map(p => {
-                console.log("test: ", p)
-                assistant += `\n\nUser: ${p.user}`
-                assistant += `\n\nResponse: ${p.system as string}`
-            })
+            if(prompt.length>=1) {
+                prompt.slice(1).map(p => {
+                    console.log("test: ", p)
+                    assistant += `\n\nUser: ${p.user}`
+                    assistant += `\n\nResponse: ${p.system as string}`
+                })
+            }
             
             const user = `Last message that requires response: ${input.currentPrompt}`
             // messages += targetPromptData
@@ -51,13 +53,30 @@ export const chatRouter = createTRPCRouter({
                 model: "gpt-3.5-turbo",
                 messages: [{ role: "system", content: system }, { role: "assistant", content: assistant }, { role: "user", content: user }],
                 max_tokens: 100,
+                temperature: 0.5,
+                stop: ["\n"]
+            })
+
+            let ret: string = (msg.data.choices[0]?.message?.content as string)
+            console.log("ret: ", ret)
+            ret = ret.replace(/(\r\n|\n|\r)/gm, "")
+            ret = ret.replace("Response: ", "")
+
+            assistant += `\n\nUser: ${input.currentPrompt}`
+            assistant += `\n\nResponse: ${ret}`
+
+            const score = await ctx.openai.createChatCompletion({
+                model: "gpt-3.5-turbo",
+                messages: [{ role: "system", content: scorePrompt }, { role: "user", content: assistant }],
+                max_tokens: 100,
                 temperature: 1
             })
 
-            const ret: string[] = (msg.data.choices[0]?.message?.content as string).split("Score: ")
-            ret[0] = ret[0]?.replace("\n", "") as string
-            ret[0] = ret[0]?.replace("Response:", "")
+            console.log("test: ", score.data.choices[0]?.message?.content)
+            const processedScore = parseInt((score.data.choices[0]?.message?.content as string).split("Score: ")[1] as string)
+            const out = [ret, processedScore]
+            console.log("out: ", out)
 
-            return ret
+            return out
         }),
 });
