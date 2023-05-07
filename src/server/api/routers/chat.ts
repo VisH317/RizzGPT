@@ -32,23 +32,24 @@ export const chatRouter = createTRPCRouter({
             const { prompt, level } = input
             const targetPromptData = prompts[level]?.prompt as string
         
-            let messages: string =  basePrompt + targetPromptData
+            const system: string =  basePrompt + targetPromptData
+            let assistant = `User: ${prompt[0]?.user as string}\n\nResponse: ${prompt[0]?.system as string}`
             console.log("prompt: ", prompt)
 
-            prompt.map(p => {
+            prompt.slice(1).map(p => {
                 console.log("test: ", p)
-                messages += `\n\nUser: ${p.user}`
-                messages += `\n\nResponse: ${p.system as string}`
+                assistant += `\n\nUser: ${p.user}`
+                assistant += `\n\nResponse: ${p.system as string}`
             })
             
-            messages += `\n\nLast message that requires response: ${input.currentPrompt}`
-            messages += targetPromptData
-            messages += postPrompt
-            console.log("message: ", messages)
+            const user = `Last message that requires response: ${input.currentPrompt}`
+            // messages += targetPromptData
+            // messages += postPrompt
+            console.log("message: ", assistant)
 
             const msg = await ctx.openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [{ role: "system", content: messages }],
+                messages: [{ role: "system", content: system }, { role: "assistant", content: assistant }, { role: "user", content: user }],
                 max_tokens: 100,
                 temperature: 1
             })
