@@ -55,7 +55,8 @@ export const chatRouter = createTRPCRouter({
             })
 
             const ret: string[] = (msg.data.choices[0]?.message?.content as string).split("Score: ")
-            ret[0]
+            ret[0] = ret[0]?.replace("\n", "") as string
+            ret[0] = ret[0]?.replace("Response:", "")
 
             return ret
         }),
