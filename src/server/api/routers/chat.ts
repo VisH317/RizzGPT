@@ -49,34 +49,42 @@ export const chatRouter = createTRPCRouter({
             // messages += postPrompt
             console.log("message: ", assistant)
 
-            const msg = await ctx.openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: [{ role: "system", content: system }, { role: "assistant", content: assistant }, { role: "user", content: user }],
-                max_tokens: 100,
-                temperature: 0.5,
-                stop: ["\n"]
-            })
+            try {
 
-            let ret: string = (msg.data.choices[0]?.message?.content as string)
-            console.log("ret: ", ret)
-            ret = ret.replace(/(\r\n|\n|\r)/gm, "")
-            ret = ret.replace("Response: ", "")
+                const msg = await ctx.openai.createChatCompletion({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "system", content: system }, { role: "assistant", content: assistant }, { role: "user", content: user }],
+                    max_tokens: 100,
+                    temperature: 0.5,
+                    stop: ["\n"]
+                })
 
-            assistant += `\n\nUser: ${input.currentPrompt}`
-            assistant += `\n\nResponse: ${ret}`
+                let ret: string = (msg.data.choices[0]?.message?.content as string)
+                console.log("ret: ", ret)
+                ret = ret.replace(/(\r\n|\n|\r)/gm, "")
+                ret = ret.replace("Response: ", "")
+    
+                assistant += `\n\nUser: ${input.currentPrompt}`
+                assistant += `\n\nResponse: ${ret}`
+    
+                const score = await ctx.openai.createChatCompletion({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "system", content: scorePrompt }, { role: "user", content: assistant }],
+                    max_tokens: 100,
+                    temperature: 1
+                })
 
-            const score = await ctx.openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: [{ role: "system", content: scorePrompt }, { role: "user", content: assistant }],
-                max_tokens: 100,
-                temperature: 1
-            })
+                console.log("score: ", score)
+    
+                console.log("test: ", score.data.choices[0]?.message?.content)
+                const processedScore = parseInt((score.data.choices[0]?.message?.content as string).split("Score: ")[1] as string)
+                const out = [ret, processedScore]
+                console.log("out: ", out)
+    
+                return out
 
-            console.log("test: ", score.data.choices[0]?.message?.content)
-            const processedScore = parseInt((score.data.choices[0]?.message?.content as string).split("Score: ")[1] as string)
-            const out = [ret, processedScore]
-            console.log("out: ", out)
-
-            return out
+            } catch (e) {
+                return ["nothing", 0]
+            }
         }),
 });
